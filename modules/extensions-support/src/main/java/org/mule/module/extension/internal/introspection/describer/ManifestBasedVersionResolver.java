@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  *
  * @since 4.0
  */
-final class ManifestBasedVersionResolver implements VersionResolver
+public final class ManifestBasedVersionResolver implements VersionResolver
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ManifestBasedVersionResolver.class);
     private final Class extensionType;

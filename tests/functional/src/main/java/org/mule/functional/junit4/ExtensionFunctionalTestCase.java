@@ -13,9 +13,11 @@ import org.mule.DefaultMuleContext;
 import org.mule.api.MuleContext;
 import org.mule.api.config.ConfigurationBuilder;
 import org.mule.api.registry.ServiceRegistry;
+import org.mule.common.MuleVersion;
 import org.mule.config.MuleManifest;
 import org.mule.config.builders.AbstractConfigurationBuilder;
 import org.mule.extension.api.ExtensionManager;
+import org.mule.extension.api.annotation.Extension;
 import org.mule.extension.api.introspection.ExtensionFactory;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.declaration.spi.Describer;
@@ -23,8 +25,10 @@ import org.mule.extension.api.resources.GeneratedResource;
 import org.mule.extension.api.resources.ResourcesGenerator;
 import org.mule.extension.api.resources.spi.GenerableResourceContributor;
 import org.mule.module.extension.internal.DefaultDescribingContext;
-import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
 import org.mule.module.extension.internal.introspection.DefaultExtensionFactory;
+import org.mule.module.extension.internal.introspection.VersionResolver;
+import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
+import org.mule.module.extension.internal.introspection.describer.ManifestBasedVersionResolver;
 import org.mule.module.extension.internal.manager.DefaultExtensionManager;
 import org.mule.module.extension.internal.resources.AbstractResourcesGenerator;
 import org.mule.registry.SpiServiceRegistry;
@@ -161,7 +165,7 @@ public abstract class ExtensionFunctionalTestCase extends FunctionalTestCase
                 int i = 0;
                 for (Class<?> annotatedClass : annotatedClasses)
                 {
-                    describers[i++] = new AnnotationsBasedDescriber(annotatedClass);
+                    describers[i++] = new AnnotationsBasedDescriber(annotatedClass, new TestSafeVersionResolver(annotatedClass));
                 }
             }
         }
@@ -306,5 +310,30 @@ public abstract class ExtensionFunctionalTestCase extends FunctionalTestCase
             }
         }
         return manifestFile;
+    }
+
+    private class TestSafeVersionResolver implements VersionResolver
+    {
+
+        private final Class<?> extensionType;
+
+        private TestSafeVersionResolver(Class<?> extensionType)
+        {
+            this.extensionType = extensionType;
+        }
+
+        @Override
+        public String resolveVersion(Extension extension)
+        {
+            String version = new ManifestBasedVersionResolver(extensionType).resolveVersion(extension).toString();
+            try
+            {
+                return new MuleVersion(version).toString();
+            }
+            catch (IllegalArgumentException e)
+            {
+                return "4.0.0-SNAPSHOT";
+            }
+        }
     }
 }
