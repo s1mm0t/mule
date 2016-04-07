@@ -24,6 +24,7 @@ import org.mule.message.DefaultExceptionPayload;
 import org.mule.processor.chain.DefaultMessageProcessorChainBuilder;
 import org.mule.routing.requestreply.ReplyToPropertyRequestReplyReplier;
 import org.mule.transaction.TransactionCoordination;
+import org.mule.transport.DefaultReplyToHandler;
 
 public abstract class TemplateMessagingExceptionStrategy extends AbstractExceptionListener implements MessagingExceptionHandlerAcceptor
 {
@@ -37,7 +38,8 @@ public abstract class TemplateMessagingExceptionStrategy extends AbstractExcepti
     {
         try
         {
-            boolean nonBlocking = event.isAllowNonBlocking();
+            boolean nonBlocking = event.isAllowNonBlocking() && event.getReplyToHandler() != null && !(event
+                    .getReplyToHandler() instanceof DefaultReplyToHandler);
 
             muleContext.getNotificationManager().fireNotification(new ExceptionStrategyNotification(event, ExceptionStrategyNotification.PROCESS_START));
             FlowConstruct flowConstruct = event.getFlowConstruct();
@@ -49,8 +51,7 @@ public abstract class TemplateMessagingExceptionStrategy extends AbstractExcepti
             // MULE-8551 Still need to add support for non-blocking components in excepton strategies.
             if(nonBlocking)
             {
-                // Make event synchronous and clear replyToHandler.  Given only HTTP supports non-blocking this will not
-                // affect other replyToHandlers like for example JmsReplyToHandler.
+                // Make event synchronous and clear replyToHandler.
                 event = new DefaultMuleEvent(event, event.getFlowConstruct(), null, null, true);
             }
             event = beforeRouting(exception, event);
@@ -62,7 +63,7 @@ public abstract class TemplateMessagingExceptionStrategy extends AbstractExcepti
             {
                 // Only process reply-to if non-blocking is not enabled. Checking the exchange pattern is not sufficient
                 // because JMS inbound endpoints for example use a REQUEST_RESPONSE exchange pattern and async processing.
-                if (!nonBlocking)
+                if (!nonBlocking && event.getReplyToHandler() instanceof DefaultReplyToHandler)
                 {
                     processReplyTo(event, exception);
                 }
