@@ -19,7 +19,7 @@ import org.mule.api.registry.ServiceRegistry;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.resources.GeneratedResource;
 import org.mule.extension.api.resources.ResourcesGenerator;
-import org.mule.extension.api.resources.spi.GenerableResourceContributor;
+import org.mule.extension.api.resources.spi.GeneratedResourceContributor;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
 
@@ -61,8 +61,8 @@ public abstract class ResourcesGeneratorContractTestCase extends AbstractMuleTes
     @Test
     public void generate()
     {
-        GenerableResourceContributor contributor = mock(GenerableResourceContributor.class);
-        when(serviceRegistry.lookupProviders(same(GenerableResourceContributor.class), any(ClassLoader.class)))
+        GeneratedResourceContributor contributor = mock(GeneratedResourceContributor.class);
+        when(serviceRegistry.lookupProviders(same(GeneratedResourceContributor.class), any(ClassLoader.class)))
                 .thenReturn(Arrays.asList(contributor));
 
         ExtensionModel extensionModel = mock(ExtensionModel.class);

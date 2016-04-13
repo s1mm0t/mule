@@ -117,6 +117,9 @@ import java.util.stream.Stream;
 public final class AnnotationsBasedDescriber implements Describer
 {
 
+    public static final String DESCRIBER_ID = "annotations";
+    public static final String TYPE_PROPERTY_NAME = "type";
+
     public static final String DEFAULT_CONNECTION_PROVIDER_NAME = "connection";
     private static final String CUSTOM_CONNECTION_PROVIDER_SUFFIX = "-" + DEFAULT_CONNECTION_PROVIDER_NAME;
 

@@ -10,7 +10,7 @@ import org.mule.api.registry.ServiceRegistry;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.resources.GeneratedResource;
 import org.mule.extension.api.resources.ResourcesGenerator;
-import org.mule.extension.api.resources.spi.GenerableResourceContributor;
+import org.mule.extension.api.resources.spi.GeneratedResourceContributor;
 
 import com.google.common.collect.ImmutableList;
 
@@ -62,7 +62,7 @@ public abstract class AbstractResourcesGenerator implements ResourcesGenerator
     @Override
     public void generateFor(ExtensionModel extensionModel)
     {
-        for (GenerableResourceContributor contributor : serviceRegistry.lookupProviders(GenerableResourceContributor.class, getClass().getClassLoader()))
+        for (GeneratedResourceContributor contributor : serviceRegistry.lookupProviders(GeneratedResourceContributor.class, getClass().getClassLoader()))
         {
             contributor.contribute(extensionModel, this);
         }

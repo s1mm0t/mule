@@ -9,7 +9,7 @@ package org.mule.module.extension.internal.capability.xml;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.property.XmlModelProperty;
 import org.mule.extension.api.resources.ResourcesGenerator;
-import org.mule.extension.api.resources.spi.GenerableResourceContributor;
+import org.mule.extension.api.resources.spi.GeneratedResourceContributor;
 import org.mule.module.extension.internal.capability.xml.schema.SchemaGenerator;
 import org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants;
 import org.mule.module.extension.internal.config.ExtensionNamespaceHandler;
@@ -17,12 +17,12 @@ import org.mule.module.extension.internal.config.ExtensionNamespaceHandler;
 import java.util.Properties;
 
 /**
- * Implementation of {@link org.mule.extension.api.resources.spi.GenerableResourceContributor}
+ * Implementation of {@link GeneratedResourceContributor}
  * Spring bundles
  *
  * @since 3.7.0
  */
-public class SpringBundleResourceContributor implements GenerableResourceContributor
+public class SpringBundleResourceContributor implements GeneratedResourceContributor
 {
 
     @Override

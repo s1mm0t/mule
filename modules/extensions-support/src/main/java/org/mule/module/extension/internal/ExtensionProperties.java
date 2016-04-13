@@ -28,16 +28,6 @@ public class ExtensionProperties
     public static final String CONNECTION_PARAM = PROPERTY_PREFIX + "CONNECTION_PARAM";
 
     /**
-     * The key of an operation's variable on which the corresponding {@link ContentMetadata} is available
-     */
-    public static final String CONTENT_METADATA = PROPERTY_PREFIX + "CONTENT_METADATA";
-
-    /**
-     * The key of an operation's variable on which the corresponding input {@link ContentType} is available
-     */
-    public static final String CONTENT_TYPE = PROPERTY_PREFIX + "CONTENT_TYPE";
-
-    /**
      * The name of a parameter that allows configuring the mimeType that should be applied
      */
     public static final String MIME_TYPE_PARAMETER_NAME = "outputMimeType";
@@ -56,5 +46,8 @@ public class ExtensionProperties
     public static final String TARGET_ATTRIBUTE = "target";
 
     public static final String TLS_ATTRIBUTE_NAME = "tlsContext";
+
     public static final String THREADING_PROFILE_ATTRIBUTE_NAME = "threadingProfile";
+
+    public static final String EXTENSION_MANIFEST_FILE_NAME = "extension-manifest.xml";
 }
