@@ -90,7 +90,7 @@ public class MuleHeadersOutInterceptor extends AbstractMuleHeaderInterceptor
     {
         Element out = owner_doc.createElementNS(MULE_NS_URI, "mule:" + localName);
         if (value != null)
-        {
+       ` {
             Text text = owner_doc.createTextNode(value);
             out.appendChild(text);
         }

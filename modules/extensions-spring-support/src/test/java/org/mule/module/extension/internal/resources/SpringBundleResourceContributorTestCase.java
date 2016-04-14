@@ -9,16 +9,20 @@ package org.mule.module.extension.internal.resources;
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertNotNull;
+import static org.hamcrest.core.IsEqual.equalTo;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.mule.api.registry.ServiceRegistry;
 import org.mule.extension.api.introspection.ExtensionModel;
+import org.mule.extension.api.introspection.property.ImportedTypesModelProperty;
 import org.mule.extension.api.introspection.property.SubTypesModelProperty;
 import org.mule.extension.api.introspection.property.XmlModelProperty;
 import org.mule.extension.api.resources.GeneratedResource;
 import org.mule.extension.api.resources.ResourcesGenerator;
 import org.mule.module.extension.internal.capability.xml.SpringBundleResourceContributor;
+import org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants;
 import org.mule.module.extension.internal.config.ExtensionNamespaceHandler;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
@@ -61,9 +65,10 @@ public class SpringBundleResourceContributorTestCase extends AbstractMuleTestCas
     @Before
     public void before()
     {
-        xmlModelProperty = new XmlModelProperty(EXTENSION_VERSION, EXTENSION_NAME, UNESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION);
+        xmlModelProperty = new XmlModelProperty(EXTENSION_VERSION, EXTENSION_NAME, UNESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, SCHEMA_NAME, String.format("%s/%s/%s", UNESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, SchemaConstants.CURRENT_VERSION, SCHEMA_NAME));
         when(extensionModel.getModelProperty(XmlModelProperty.class)).thenReturn(Optional.of(xmlModelProperty));
         when(extensionModel.getModelProperty(SubTypesModelProperty.class)).thenReturn(Optional.empty());
+        when(extensionModel.getModelProperty(ImportedTypesModelProperty.class)).thenReturn(Optional.empty());
 
         generator = new AnnotationProcessorResourceGenerator(mock(ProcessingEnvironment.class), serviceRegistry);
 
@@ -90,7 +95,7 @@ public class SpringBundleResourceContributorTestCase extends AbstractMuleTestCas
 
         GeneratedResource resource = generator.get("spring.handlers");
         assertNotNull(resource);
-        assertEquals(String.format("%s=%s", ESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, ExtensionNamespaceHandler.class.getName()), resource.getContentBuilder().toString());
+        assertThat(String.format("%s=%s", ESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, ExtensionNamespaceHandler.class.getName()), equalTo(resource.getContentBuilder().toString().trim()));
     }
 
     @Test

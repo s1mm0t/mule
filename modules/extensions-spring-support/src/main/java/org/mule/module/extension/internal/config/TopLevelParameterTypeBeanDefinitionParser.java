@@ -7,7 +7,10 @@
 package org.mule.module.extension.internal.config;
 
 import static org.mule.api.config.MuleProperties.OBJECT_MULE_CONTEXT;
+import static org.mule.config.spring.parsers.specific.NameConstants.MULE_NAMESPACE;
+import org.mule.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.metadata.api.model.MetadataType;
+import org.mule.util.StringUtils;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.ParserContext;
@@ -37,6 +40,10 @@ final class TopLevelParameterTypeBeanDefinitionParser extends BaseExtensionBeanD
     @Override
     protected void doParse(BeanDefinitionBuilder builder, Element element, XmlExtensionParserDelegate parserDelegate, ParserContext parserContext)
     {
+        if (StringUtils.isBlank(element.getAttribute("name")) && !element.getNamespaceURI().equals(MULE_NAMESPACE))
+        {
+            throw new IllegalModelDefinitionException(String.format("Element %s must should have a [name] attribute", element.getTagName()));
+        }
         builder.addConstructorArgValue(parserDelegate.toElementDescriptorBeanDefinition(element));
         builder.addConstructorArgValue(metadataType);
         builder.addConstructorArgReference(OBJECT_MULE_CONTEXT);

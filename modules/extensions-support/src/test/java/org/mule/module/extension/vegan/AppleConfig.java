@@ -9,6 +9,7 @@ package org.mule.module.extension.vegan;
 import static org.mule.module.extension.vegan.VeganExtension.APPLE;
 import org.mule.extension.api.annotation.Configuration;
 import org.mule.extension.api.annotation.Operations;
+import org.mule.extension.api.annotation.Parameter;
 import org.mule.extension.api.annotation.Sources;
 import org.mule.extension.api.annotation.connector.Providers;
 
@@ -18,5 +19,12 @@ import org.mule.extension.api.annotation.connector.Providers;
 @Providers(VeganAppleConnectionProvider.class)
 public class AppleConfig
 {
+    @Parameter
+    private ApplesBasket basket;
+
+    public ApplesBasket getBasket()
+    {
+        return basket;
+    }
 
 }

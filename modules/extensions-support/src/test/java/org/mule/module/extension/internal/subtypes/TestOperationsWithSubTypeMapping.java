@@ -4,10 +4,11 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.module.extension.internal.runtime.connector.subtypes;
+package org.mule.module.extension.internal.subtypes;
 
 import org.mule.extension.api.annotation.param.Connection;
 import org.mule.extension.api.annotation.param.UseConfig;
+import org.mule.module.extension.vegan.ApplesBasket;
 
 import java.util.Arrays;
 import java.util.List;
@@ -35,8 +36,8 @@ public class TestOperationsWithSubTypeMapping
         return connection;
     }
 
-    public List<Object> subtypedAndConcreteParameters(Shape shapeParam, Door doorParam, FinalPojo finalPojoParam)
+    public List<Object> subtypedAndConcreteParameters(Shape shapeParam, Door doorParam, FinalPojo finalPojoParam, ApplesBasket basket)
     {
-        return Arrays.asList(shapeParam, doorParam, finalPojoParam);
+        return Arrays.asList(shapeParam, doorParam, finalPojoParam, basket);
     }
 }

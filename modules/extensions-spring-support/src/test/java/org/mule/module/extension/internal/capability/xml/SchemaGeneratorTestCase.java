@@ -27,7 +27,7 @@ import org.mule.module.extension.internal.runtime.connector.basic.ListConnector;
 import org.mule.module.extension.internal.runtime.connector.basic.MapConnector;
 import org.mule.module.extension.internal.runtime.connector.basic.StringListConnector;
 import org.mule.module.extension.internal.runtime.connector.basic.TestConnector;
-import org.mule.module.extension.internal.runtime.connector.subtypes.SubTypesMappingConnector;
+import org.mule.module.extension.internal.subtypes.SubTypesMappingConnector;
 import org.mule.module.extension.vegan.VeganExtension;
 import org.mule.registry.SpiServiceRegistry;
 import org.mule.tck.junit4.AbstractMuleTestCase;

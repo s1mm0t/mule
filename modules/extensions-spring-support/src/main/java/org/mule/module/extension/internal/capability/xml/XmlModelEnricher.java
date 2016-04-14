@@ -6,11 +6,13 @@
  */
 package org.mule.module.extension.internal.capability.xml;
 
+import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.DEFAULT_SCHEMA_LOCATION_MASK;
 import org.mule.extension.api.annotation.capability.Xml;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.fluent.ExtensionDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.ExtensionDeclarer;
 import org.mule.extension.api.introspection.property.XmlModelProperty;
+import org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants;
 import org.mule.module.extension.internal.introspection.enricher.AbstractAnnotatedModelEnricher;
 import org.mule.module.extension.internal.util.NameUtils;
 import org.mule.util.StringUtils;
@@ -30,23 +32,25 @@ import java.util.function.Supplier;
 public final class XmlModelEnricher extends AbstractAnnotatedModelEnricher
 {
 
-    private static final String DEFAULT_SCHEMA_LOCATION_MASK = "http://www.mulesoft.org/schema/mule/%s";
-
     @Override
     public void enrich(DescribingContext describingContext)
     {
         Xml xml = extractAnnotation(describingContext.getExtensionDeclarer().getExtensionDeclaration(), Xml.class);
         ExtensionDeclarer descriptor = describingContext.getExtensionDeclarer();
-        descriptor.withModelProperty(createXmlModelProperty(xml, descriptor));
+        ExtensionDeclaration extensionDeclaration = descriptor.getExtensionDeclaration();
+        descriptor.withModelProperty(createXmlModelProperty(xml, extensionDeclaration.getName(), extensionDeclaration.getVersion()));
     }
 
-    private XmlModelProperty createXmlModelProperty(Xml xml, ExtensionDeclarer descriptor)
+    public XmlModelProperty createXmlModelProperty(Xml xml, String extensionName, String extensionVersion)
     {
-        ExtensionDeclaration extensionDeclaration = descriptor.getExtensionDeclaration();
-        String schemaVersion = calculateValue(xml, () -> xml.schemaVersion(), extensionDeclaration::getVersion);
-        String namespace = calculateValue(xml, () -> xml.namespace(), () -> buildDefaultNamespace(extensionDeclaration.getName()));
-        String schemaLocation = calculateValue(xml, () -> xml.schemaLocation(), () -> buildDefaultLocation(namespace));
-        return new XmlModelProperty(schemaVersion, namespace, schemaLocation);
+
+        String schemaVersion = calculateValue(xml, () -> xml.schemaVersion(), () -> extensionVersion);
+        String namespace = calculateValue(xml, () -> xml.namespace(), () -> buildDefaultNamespace(extensionName));
+        String namespaceLocation = calculateValue(xml, () -> xml.namespaceLocation(), () -> buildDefaultLocation(namespace));
+        String xsdFileName = buildDefaultXsdFileName(namespace);
+        String schemaLocation = buildDefaultSchemaLocation(namespaceLocation, xsdFileName);
+
+        return new XmlModelProperty(schemaVersion, namespace, namespaceLocation, xsdFileName, schemaLocation);
     }
 
     private String calculateValue(Xml xml, Supplier<String> value, Supplier<String> fallback)
@@ -76,6 +80,16 @@ public final class XmlModelEnricher extends AbstractAnnotatedModelEnricher
         namespace = StringUtils.isBlank(namespace) ? declarationName : namespace;
         return NameUtils.hyphenize(namespace);
 
+    }
+
+    private String buildDefaultXsdFileName(String namespace)
+    {
+        return String.format("mule-%s%s", namespace, SchemaConstants.XSD_EXTENSION);
+    }
+
+    private String buildDefaultSchemaLocation(String namespaceLocation, String xsdFileName)
+    {
+        return String.format("%s/%s/%s", namespaceLocation, SchemaConstants.CURRENT_VERSION, xsdFileName);
     }
 
     private String removeFromName(String name, String word)

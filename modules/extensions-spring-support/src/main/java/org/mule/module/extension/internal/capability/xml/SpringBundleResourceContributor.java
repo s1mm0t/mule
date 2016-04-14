@@ -11,7 +11,6 @@ import org.mule.extension.api.introspection.property.XmlModelProperty;
 import org.mule.extension.api.resources.ResourcesGenerator;
 import org.mule.extension.api.resources.spi.GenerableResourceContributor;
 import org.mule.module.extension.internal.capability.xml.schema.SchemaGenerator;
-import org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants;
 import org.mule.module.extension.internal.config.ExtensionNamespaceHandler;
 
 import java.util.Properties;
@@ -37,7 +36,7 @@ public class SpringBundleResourceContributor implements GenerableResourceContrib
     private void generateSchema(ExtensionModel extensionModel, XmlModelProperty xmlProperty, ResourcesGenerator resourcesGenerator)
     {
         String schema = new SchemaGenerator().generate(extensionModel, xmlProperty);
-        resourcesGenerator.get(getXsdFileName(xmlProperty)).getContentBuilder().append(schema);
+        resourcesGenerator.get(xmlProperty.getXsdFileName()).getContentBuilder().append(schema);
     }
 
     private void generateSpringBundle(XmlModelProperty xmlProperty, ResourcesGenerator resourcesGenerator)
@@ -48,8 +47,8 @@ public class SpringBundleResourceContributor implements GenerableResourceContrib
 
     private void writeSpringHandlerBundle(XmlModelProperty capability, ResourcesGenerator resourcesGenerator)
     {
-        String content = String.format("%s=%s", capability.getSchemaLocation(), ExtensionNamespaceHandler.class.getName());
-        resourcesGenerator.get("spring.handlers").getContentBuilder().append(springBundleScape(content));
+        String content = String.format("%s=%s", capability.getNamespaceUri(), ExtensionNamespaceHandler.class.getName());
+        resourcesGenerator.get("spring.handlers").getContentBuilder().append(springBundleScape(content)).append("\n");
     }
 
     private void writeSpringSchemaBundle(XmlModelProperty xmlProperty, ResourcesGenerator resourcesGenerator)
@@ -61,15 +60,9 @@ public class SpringBundleResourceContributor implements GenerableResourceContrib
 
     private String getSpringSchemaBundle(XmlModelProperty xmlProperty, String version)
     {
-        String filename = getXsdFileName(xmlProperty);
-        return springBundleScape(String.format("%s/%s/%s=META-INF/%s\n", xmlProperty.getSchemaLocation(), version, filename, filename));
+        String filename = xmlProperty.getXsdFileName();
+        return springBundleScape(String.format("%s/%s/%s=META-INF/%s\n", xmlProperty.getNamespaceUri(), version, filename, filename));
     }
-
-    private String getXsdFileName(XmlModelProperty xmlModelProperty)
-    {
-        return String.format("mule-%s%s", xmlModelProperty.getNamespace(), SchemaConstants.XSD_EXTENSION);
-    }
-
 
     /**
      * Colon is a special character for the {@link Properties} class

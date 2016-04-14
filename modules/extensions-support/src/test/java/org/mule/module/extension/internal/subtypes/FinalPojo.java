@@ -4,20 +4,20 @@
  * license, a copy of which has been included with this distribution in the
  * LICENSE.txt file.
  */
-package org.mule.module.extension.internal.runtime.connector.subtypes;
+package org.mule.module.extension.internal.subtypes;
 
-public class Square extends Shape
+public final class FinalPojo
 {
 
-    private Integer side;
+    private String someString;
 
-    public Integer getSide()
+    public String getSomeString()
     {
-        return side;
+        return someString;
     }
 
-    public void setSide(Integer side)
+    public void setSomeString(String someString)
     {
-        this.side = side;
+        this.someString = someString;
     }
 }

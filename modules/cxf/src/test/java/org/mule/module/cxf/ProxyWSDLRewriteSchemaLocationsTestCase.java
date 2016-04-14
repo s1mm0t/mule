@@ -106,7 +106,7 @@ public class ProxyWSDLRewriteSchemaLocationsTestCase extends FunctionalTestCase
 
     private String getLocation(Element schemaImport)
     {
-        return schemaImport.getAttributes().getNamedItem("schemaLocation").getNodeValue();
+        return schemaImport.getAttributes().getNamedItem("namespaceLocation").getNodeValue();
     }
 
 }

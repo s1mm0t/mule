@@ -17,6 +17,7 @@ import static org.mule.module.extension.internal.introspection.describer.MuleExt
 import static org.mule.module.extension.internal.introspection.describer.MuleExtensionAnnotationParser.getMemberName;
 import static org.mule.module.extension.internal.introspection.describer.MuleExtensionAnnotationParser.parseDisplayAnnotations;
 import static org.mule.module.extension.internal.introspection.describer.MuleExtensionAnnotationParser.parseMetadataAnnotations;
+import static org.mule.module.extension.internal.introspection.describer.MuleExtensionAnnotationParser.parseRepeatableAnnotation;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getExposedFields;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getField;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getInterfaceGenerics;
@@ -40,9 +41,12 @@ import org.mule.extension.api.annotation.Expression;
 import org.mule.extension.api.annotation.Extensible;
 import org.mule.extension.api.annotation.Extension;
 import org.mule.extension.api.annotation.ExtensionOf;
+import org.mule.extension.api.annotation.ImportType;
+import org.mule.extension.api.annotation.ImportedTypes;
 import org.mule.extension.api.annotation.OnException;
 import org.mule.extension.api.annotation.Operations;
 import org.mule.extension.api.annotation.Sources;
+import org.mule.extension.api.annotation.SubTypeMapping;
 import org.mule.extension.api.annotation.SubTypesMapping;
 import org.mule.extension.api.annotation.connector.Providers;
 import org.mule.extension.api.annotation.metadata.MetadataScope;
@@ -70,6 +74,7 @@ import org.mule.extension.api.introspection.declaration.type.ExtensionsTypeLoade
 import org.mule.extension.api.introspection.metadata.MetadataResolverFactory;
 import org.mule.extension.api.introspection.property.DisplayModelProperty;
 import org.mule.extension.api.introspection.property.DisplayModelPropertyBuilder;
+import org.mule.extension.api.introspection.property.ImportedTypesModelProperty;
 import org.mule.extension.api.runtime.source.Source;
 import org.mule.metadata.api.ClassTypeLoader;
 import org.mule.metadata.api.model.MetadataType;
@@ -168,6 +173,7 @@ public final class AnnotationsBasedDescriber implements Describer
                 .withModelProperty(new ImplementingTypeModelProperty(extensionType));
 
         declareSubTypesMapping(declaration, extensionType);
+        declareImportedTypes(declaration, extensionType);
         declareConfigurations(declaration, extensionType);
         declareOperations(declaration, extensionType);
         declareConnectionProviders(declaration, extensionType);
@@ -183,17 +189,31 @@ public final class AnnotationsBasedDescriber implements Describer
 
     private void declareSubTypesMapping(ExtensionDeclarer declaration, Class<?> extensionType)
     {
-        SubTypesMapping typesMapping = extensionType.getAnnotation(SubTypesMapping.class);
+        List<SubTypeMapping> typeMappings = parseRepeatableAnnotation(extensionType, SubTypeMapping.class, c -> ((SubTypesMapping)c).value());
 
-        if (typesMapping != null)
+        if (!typeMappings.isEmpty())
         {
-            Map<MetadataType, List<MetadataType>> subTypesMap = stream(typesMapping.value()).collect(toMap(
+            Map<MetadataType, List<MetadataType>> subTypesMap = typeMappings.stream().collect(toMap(
                     mapping -> getMetadataType(mapping.baseType(), typeLoader),
                     mapping -> stream(mapping.subTypes())
                             .map(subType -> getMetadataType(subType, typeLoader))
                             .collect(toList())));
 
             declaration.withModelProperty(new SubTypesModelProperty(subTypesMap));
+        }
+    }
+
+    private void declareImportedTypes(ExtensionDeclarer declaration, Class<?> extensionType)
+    {
+        List<ImportType> importTypes = parseRepeatableAnnotation(extensionType, ImportType.class, c -> ((ImportedTypes)c).value());
+
+        if (!importTypes.isEmpty())
+        {
+            Map<MetadataType, Class<?>> importedTypes = importTypes.stream().collect(toMap(
+                    imports -> getMetadataType(imports.type(), typeLoader),
+                    ImportType::from));
+
+            declaration.withModelProperty(new ImportedTypesModelProperty(importedTypes));
         }
     }
 

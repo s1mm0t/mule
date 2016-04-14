@@ -16,7 +16,7 @@ import org.mule.extension.api.annotation.connector.Providers;
 @Operations({MetadataOperations.class, MetadataFailureOperations.class})
 @Providers(MetadataConnectionProvider.class)
 @Sources(MetadataSource.class)
-@Xml(schemaLocation = "http://www.mulesoft.org/schema/mule/metadata", namespace = "metadata", schemaVersion = "3.7")
+@Xml(namespaceLocation = "http://www.mulesoft.org/schema/mule/metadata", namespace = "metadata", schemaVersion = "4.0")
 public class MetadataExtension
 {
 

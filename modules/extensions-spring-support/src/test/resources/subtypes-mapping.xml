@@ -1,20 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xmlns:subtypes="http://www.mulesoft.org/schema/mule/subtypes"
+      xmlns:heisenberg="http://www.mulesoft.org/schema/mule/heisenberg"
+      xmlns:vegan="http://www.mulesoft.org/schema/mule/vegan"
       xmlns="http://www.mulesoft.org/schema/mule/core"
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-      http://www.mulesoft.org/schema/mule/subtypes http://www.mulesoft.org/schema/mule/subtypes/current/mule-subtypes.xsd">
+      http://www.mulesoft.org/schema/mule/subtypes http://www.mulesoft.org/schema/mule/subtypes/current/mule-subtypes.xsd
+      http://www.mulesoft.org/schema/mule/heisenberg http://www.mulesoft.org/schema/mule/heisenberg/current/mule-heisenberg.xsd
+      http://www.mulesoft.org/schema/mule/vegan http://www.mulesoft.org/schema/mule/vegan/current/mule-vegan.xsd">
 
     <subtypes:config name="config">
         <subtypes:connection>
-            <subtypes:triangle-alias height="2" area="1"/>
             <subtypes:house-door locked="true"/>
+            <subtypes:triangle-alias height="2" area="1"/>
         </subtypes:connection>
 
-        <subtypes:explicit-square side="2" area="4"/>
         <subtypes:car-door color="red"/>
         <subtypes:final-pojo someString="message"/>
-        <subtypes:square side="1" area="1"/>
+        <subtypes:explicit-square side="2" area="4"/>
+        <heisenberg:ricin microgramsPerKilo="22" name="ricin"/>
+        <subtypes:square area="1" side="1"/>
     </subtypes:config>
 
     <flow name="shapeRetriever">
@@ -58,4 +63,5 @@
                 finalPojoParam="global-final-pojo"
         />
     </flow>
+
 </mule>
