@@ -6,17 +6,19 @@
  */
 package org.mule.module.extension.internal.introspection.validation;
 
+import static org.mule.config.MuleManifest.getProductVersion;
 import org.mule.extension.api.annotation.Configuration;
 import org.mule.extension.api.annotation.Configurations;
 import org.mule.extension.api.annotation.Extension;
 import org.mule.extension.api.annotation.Operations;
 import org.mule.extension.api.annotation.param.UseConfig;
-import org.mule.module.extension.internal.exception.IllegalConfigurationModelDefinitionException;
 import org.mule.extension.api.introspection.ExtensionFactory;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.module.extension.internal.DefaultDescribingContext;
-import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
+import org.mule.module.extension.internal.exception.IllegalConfigurationModelDefinitionException;
 import org.mule.module.extension.internal.introspection.DefaultExtensionFactory;
+import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
+import org.mule.module.extension.internal.introspection.version.StaticVersionResolver;
 import org.mule.registry.SpiServiceRegistry;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
@@ -105,7 +107,7 @@ public class ConfigurationModelValidatorTestCase extends AbstractMuleTestCase
 
     private ExtensionModel modelFor(Class<?> connectorClass)
     {
-        return extensionFactory.createFrom(new AnnotationsBasedDescriber(connectorClass).describe(new DefaultDescribingContext()));
+        return extensionFactory.createFrom(new AnnotationsBasedDescriber(connectorClass, new StaticVersionResolver(getProductVersion())).describe(new DefaultDescribingContext()));
     }
 
     private void validate(Class<?> connectorClass)

@@ -13,6 +13,7 @@ import org.mule.api.MuleEvent;
 import org.mule.api.metadata.DataType;
 import org.mule.functional.junit4.ExtensionFunctionalTestCase;
 import org.mule.functional.junit4.FlowRunner;
+import org.mule.module.extension.HeisenbergExtension;
 
 import java.nio.charset.Charset;
 
@@ -30,6 +31,12 @@ public class ContentTypeHandlingTestCase extends ExtensionFunctionalTestCase
     protected String getConfigFile()
     {
         return "content-type-handling-config.xml";
+    }
+
+    @Override
+    protected Class<?>[] getAnnotatedExtensionClasses()
+    {
+        return new Class<?>[] {HeisenbergExtension.class};
     }
 
     @Before

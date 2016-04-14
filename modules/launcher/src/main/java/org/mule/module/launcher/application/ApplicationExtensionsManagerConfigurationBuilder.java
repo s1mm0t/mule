@@ -7,26 +7,24 @@
 package org.mule.module.launcher.application;
 
 import static org.mule.api.lifecycle.LifecycleUtils.initialiseIfNeeded;
+import static org.mule.module.extension.internal.ExtensionProperties.EXTENSION_MANIFEST_FILE_NAME;
 import org.mule.DefaultMuleContext;
 import org.mule.api.MuleContext;
+import org.mule.api.lifecycle.InitialisationException;
 import org.mule.config.builders.AbstractConfigurationBuilder;
 import org.mule.extension.api.ExtensionManager;
-import org.mule.extension.api.introspection.RuntimeExtensionModel;
-import org.mule.extension.api.introspection.declaration.fluent.ExtensionDeclarer;
-import org.mule.extension.api.introspection.declaration.spi.Describer;
-import org.mule.module.extension.internal.DefaultDescribingContext;
-import org.mule.module.extension.internal.introspection.DefaultExtensionFactory;
+import org.mule.extension.api.manifest.ExtensionManifest;
+import org.mule.extension.api.persistence.manifest.ExtensionManifestXmlSerializer;
 import org.mule.module.extension.internal.manager.DefaultExtensionManager;
-import org.mule.registry.SpiServiceRegistry;
+import org.mule.module.extension.internal.manager.ExtensionManagerAdapter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
-import java.util.Enumeration;
 import java.util.List;
-import java.util.ServiceLoader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.IOUtils;
+import org.slf4j.Logger;
 
 /**
  * Implementation of {@link org.mule.api.config.ConfigurationBuilder}
@@ -37,7 +35,7 @@ import org.apache.commons.logging.LogFactory;
 public class ApplicationExtensionsManagerConfigurationBuilder extends AbstractConfigurationBuilder
 {
 
-    private static Log logger = LogFactory.getLog(ApplicationExtensionsManagerConfigurationBuilder.class);
+    private static Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ApplicationExtensionsManagerConfigurationBuilder.class);
 
     private final List<ApplicationPlugin> applicationPlugins;
 
@@ -49,45 +47,44 @@ public class ApplicationExtensionsManagerConfigurationBuilder extends AbstractCo
     @Override
     protected void doConfigure(MuleContext muleContext) throws Exception
     {
-        ExtensionManager extensionManager = new DefaultExtensionManager();
-        ((DefaultMuleContext) muleContext).setExtensionManager(extensionManager);
-        initialiseIfNeeded(extensionManager, muleContext);
+        final ExtensionManagerAdapter extensionManager = createExtensionManager(muleContext);
 
         for (ApplicationPlugin applicationPlugin : applicationPlugins)
         {
-            final ServiceLoader<Describer> describers = ServiceLoader.load(Describer.class, new ClassLoader(null)
+            URL manifestUrl = applicationPlugin.getArtifactClassLoader().findResource("/META-INF/" + EXTENSION_MANIFEST_FILE_NAME);
+            if (manifestUrl == null)
             {
-                @Override
-                public Class<?> loadClass(String name) throws ClassNotFoundException
-                {
-                    return applicationPlugin.getArtifactClassLoader().getClassLoader().loadClass(name);
-                }
+                continue;
+            }
 
-                @Override
-                protected URL findResource(String name)
-                {
-                    return applicationPlugin.getArtifactClassLoader().findResource(name);
-                }
+            ExtensionManifest extensionManifest = readManifest(manifestUrl);
+            extensionManager.registerExtension(extensionManifest, applicationPlugin.getArtifactClassLoader().getClassLoader());
 
-                @Override
-                protected Enumeration<URL> findResources(String name) throws IOException
-                {
-                    return applicationPlugin.getArtifactClassLoader().findResources(name);
-                }
-            });
-
-            for (Describer describer : describers)
+            if (LOGGER.isDebugEnabled())
             {
-                if (logger.isDebugEnabled())
-                {
-                    logger.debug("Discovered extension: " + describer.getClass().getName());
-                }
-
-                ExtensionDeclarer declarer = describer.describe(new DefaultDescribingContext());
-                final DefaultExtensionFactory extensionFactory = new DefaultExtensionFactory(new SpiServiceRegistry(), applicationPlugin.getArtifactClassLoader().getClassLoader());
-                final RuntimeExtensionModel extensionModel = extensionFactory.createFrom(declarer);
-                extensionManager.registerExtension(extensionModel);
+                LOGGER.debug("Discovered extension  " + extensionManifest.getName());
             }
         }
+    }
+
+    private ExtensionManifest readManifest(URL manifestUrl) throws IOException
+    {
+        try (InputStream manifestStream = manifestUrl.openStream())
+        {
+            return new ExtensionManifestXmlSerializer().deserialize(IOUtils.toString(manifestStream));
+        }
+        catch (IOException e)
+        {
+            throw new IOException("Could not read extension manifest on plugin " + manifestUrl.toString(), e);
+        }
+    }
+
+    private ExtensionManagerAdapter createExtensionManager(MuleContext muleContext) throws InitialisationException
+    {
+        ExtensionManagerAdapter extensionManager = new DefaultExtensionManager();
+        ((DefaultMuleContext) muleContext).setExtensionManager(extensionManager);
+        initialiseIfNeeded(extensionManager, muleContext);
+
+        return extensionManager;
     }
 }

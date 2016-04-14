@@ -6,11 +6,13 @@
  */
 package org.mule.module.extension.internal;
 
-import org.mule.extension.api.introspection.declaration.fluent.ExtensionDeclarer;
-import org.mule.extension.api.introspection.declaration.spi.Describer;
+import static org.mule.config.MuleManifest.getProductVersion;
 import org.mule.extension.api.introspection.declaration.fluent.ExtensionDeclaration;
+import org.mule.extension.api.introspection.declaration.fluent.ExtensionDeclarer;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDeclaration;
+import org.mule.extension.api.introspection.declaration.spi.Describer;
 import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
+import org.mule.module.extension.internal.introspection.version.StaticVersionResolver;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.util.CollectionUtils;
 
@@ -30,7 +32,7 @@ public abstract class AbstractAnnotationsBasedDescriberTestCase extends Abstract
 
     protected Describer describerFor(final Class<?> type)
     {
-        return new AnnotationsBasedDescriber(type);
+        return new AnnotationsBasedDescriber(type, new StaticVersionResolver(getProductVersion()));
     }
 
     protected ExtensionDeclarer describeExtension()

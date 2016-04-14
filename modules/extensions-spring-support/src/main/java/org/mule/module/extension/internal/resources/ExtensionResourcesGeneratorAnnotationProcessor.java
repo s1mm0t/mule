@@ -13,11 +13,12 @@ import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.spi.Describer;
 import org.mule.extension.api.resources.ResourcesGenerator;
+import org.mule.extension.api.resources.spi.GeneratedResourceFactory;
 import org.mule.module.extension.internal.DefaultDescribingContext;
 import org.mule.module.extension.internal.capability.xml.schema.AnnotationProcessorUtils;
 import org.mule.module.extension.internal.introspection.DefaultExtensionFactory;
-import org.mule.module.extension.internal.introspection.VersionResolver;
 import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
+import org.mule.module.extension.internal.introspection.version.StaticVersionResolver;
 import org.mule.registry.SpiServiceRegistry;
 import org.mule.util.ExceptionUtils;
 
@@ -65,7 +66,8 @@ public class ExtensionResourcesGeneratorAnnotationProcessor extends AbstractProc
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv)
     {
         log("Starting Resources generator for Extensions");
-        ResourcesGenerator generator = new AnnotationProcessorResourceGenerator(processingEnv, new SpiServiceRegistry());
+        ResourcesGenerator generator = new AnnotationProcessorResourceGenerator(fetchResourceFactories(), processingEnv);
+
         try
         {
             final ClassLoader originalCurrentClassLoader = Thread.currentThread().getContextClassLoader();
@@ -83,8 +85,6 @@ public class ExtensionResourcesGeneratorAnnotationProcessor extends AbstractProc
                 }
             });
 
-            generator.dumpAll();
-
             return false;
         }
         catch (Exception e)
@@ -98,7 +98,7 @@ public class ExtensionResourcesGeneratorAnnotationProcessor extends AbstractProc
     private ExtensionModel parseExtension(TypeElement extensionElement, RoundEnvironment roundEnvironment)
     {
         Class<?> extensionClass = AnnotationProcessorUtils.classFor(extensionElement, processingEnv);
-        Describer describer = new AnnotationsBasedDescriber(extensionClass, new FixedVersionResolver());
+        Describer describer = new AnnotationsBasedDescriber(extensionClass, new StaticVersionResolver(getVersion()));
 
         DescribingContext context = new DefaultDescribingContext();
         context.addParameter(EXTENSION_ELEMENT, extensionElement);
@@ -118,18 +118,19 @@ public class ExtensionResourcesGeneratorAnnotationProcessor extends AbstractProc
         processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
     }
 
-    private class FixedVersionResolver implements VersionResolver
+    private String getVersion()
     {
-
-        @Override
-        public String resolveVersion(Extension extension)
+        String extensionVersion = processingEnv.getOptions().get("extension.version");
+        if (extensionVersion == null)
         {
-            String extensionVersion = processingEnv.getOptions().get("extension.version");
-            if (extensionVersion == null)
-            {
-                throw new RuntimeException(String.format("Cannot resolve version for extension %s: option extension.version is missing.", extension.name()));
-            }
-            return extensionVersion;
+            throw new RuntimeException("Cannot resolve version for extension %s: option extension.version is missing.");
         }
+
+        return extensionVersion;
+    }
+
+    private List<GeneratedResourceFactory> fetchResourceFactories()
+    {
+        return ImmutableList.copyOf(serviceRegistry.lookupProviders(GeneratedResourceFactory.class, getClass().getClassLoader()));
     }
 }

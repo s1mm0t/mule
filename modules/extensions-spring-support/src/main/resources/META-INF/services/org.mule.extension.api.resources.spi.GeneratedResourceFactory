@@ -1,0 +1,3 @@
+org.mule.module.extension.internal.capability.xml.schema.SchemaResourceFactory
+org.mule.module.extension.internal.capability.xml.schema.SpringHandlerBundleResourceFactory
+org.mule.module.extension.internal.capability.xml.schema.SpringSchemaBundleResourceFactory

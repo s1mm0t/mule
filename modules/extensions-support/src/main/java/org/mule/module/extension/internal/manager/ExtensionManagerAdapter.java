@@ -8,6 +8,7 @@ package org.mule.module.extension.internal.manager;
 
 import org.mule.extension.api.ExtensionManager;
 import org.mule.extension.api.introspection.ExtensionModel;
+import org.mule.extension.api.introspection.RuntimeExtensionModel;
 import org.mule.extension.api.runtime.ConfigurationProvider;
 
 import java.util.Optional;
@@ -46,4 +47,11 @@ public interface ExtensionManagerAdapter extends ExtensionManager
      * @return an {@link Optional} {@link ConfigurationProvider}
      */
     <C> Optional<ConfigurationProvider<C>> getConfigurationProvider(String configurationProviderName);
+
+    /**
+     * Registers the given {@link ExtensionModel}.
+     *
+     * @param extensionModel the {@link ExtensionModel} to be registered. Cannot be {@code null}
+     */
+    void registerExtension(RuntimeExtensionModel extensionModel);
 }

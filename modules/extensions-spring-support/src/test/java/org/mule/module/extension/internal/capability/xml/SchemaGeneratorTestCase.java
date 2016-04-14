@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mule.config.MuleManifest.getProductVersion;
 import org.mule.api.registry.ServiceRegistry;
 import org.mule.extension.api.introspection.ExtensionFactory;
 import org.mule.extension.api.introspection.ExtensionModel;
@@ -21,6 +22,7 @@ import org.mule.module.extension.internal.DefaultDescribingContext;
 import org.mule.module.extension.internal.capability.xml.schema.SchemaGenerator;
 import org.mule.module.extension.internal.introspection.DefaultExtensionFactory;
 import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
+import org.mule.module.extension.internal.introspection.version.StaticVersionResolver;
 import org.mule.module.extension.internal.runtime.connector.basic.GlobalInnerPojoConnector;
 import org.mule.module.extension.internal.runtime.connector.basic.GlobalPojoConnector;
 import org.mule.module.extension.internal.runtime.connector.basic.ListConnector;
@@ -92,7 +94,7 @@ public class SchemaGeneratorTestCase extends AbstractMuleTestCase
     {
         String expectedSchema = IOUtils.getResourceAsString(expectedXSD, getClass());
 
-        ExtensionDeclarer declarer = new AnnotationsBasedDescriber(extensionUnderTest).describe(new DefaultDescribingContext());
+        ExtensionDeclarer declarer = new AnnotationsBasedDescriber(extensionUnderTest, new StaticVersionResolver(getProductVersion())).describe(new DefaultDescribingContext());
         ExtensionModel extensionModel = extensionFactory.createFrom(declarer);
 
         XmlModelProperty capability = extensionModel.getModelProperty(XmlModelProperty.class).get();

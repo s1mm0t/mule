@@ -78,7 +78,7 @@ import org.mule.module.extension.internal.exception.IllegalConnectionProviderMod
 import org.mule.module.extension.internal.exception.IllegalOperationModelDefinitionException;
 import org.mule.module.extension.internal.exception.IllegalParameterModelDefinitionException;
 import org.mule.module.extension.internal.introspection.ParameterGroup;
-import org.mule.module.extension.internal.introspection.VersionResolver;
+import org.mule.module.extension.internal.introspection.version.VersionResolver;
 import org.mule.module.extension.internal.model.property.ConfigTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ExtendingOperationModelProperty;
@@ -132,11 +132,6 @@ public final class AnnotationsBasedDescriber implements Describer
      * an specific {@link Field}
      */
     private List<FieldDescriber> fieldDescribers;
-
-    public AnnotationsBasedDescriber(Class<?> extensionType)
-    {
-        this(extensionType, new ManifestBasedVersionResolver(extensionType));
-    }
 
     public AnnotationsBasedDescriber(Class<?> extensionType, VersionResolver versionResolver)
     {

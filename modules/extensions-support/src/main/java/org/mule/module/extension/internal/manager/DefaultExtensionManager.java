@@ -20,11 +20,14 @@ import org.mule.api.lifecycle.Startable;
 import org.mule.api.lifecycle.Stoppable;
 import org.mule.api.registry.MuleRegistry;
 import org.mule.api.registry.ServiceRegistry;
-import org.mule.extension.api.introspection.ExtensionDiscoverer;
+import org.mule.extension.api.introspection.ExtensionFactory;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.RuntimeExtensionModel;
+import org.mule.extension.api.introspection.declaration.spi.Describer;
+import org.mule.extension.api.manifest.ExtensionManifest;
 import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.ConfigurationProvider;
+import org.mule.module.extension.internal.DefaultDescribingContext;
 import org.mule.module.extension.internal.config.ExtensionConfig;
 import org.mule.module.extension.internal.introspection.DefaultExtensionFactory;
 import org.mule.module.extension.internal.runtime.config.DefaultImplicitConfigurationFactory;
@@ -32,8 +35,6 @@ import org.mule.module.extension.internal.runtime.config.ImplicitConfigurationFa
 import org.mule.module.extension.internal.runtime.config.StaticConfigurationProvider;
 import org.mule.registry.SpiServiceRegistry;
 import org.mule.time.Time;
-
-import com.google.common.collect.ImmutableList;
 
 import java.util.List;
 import java.util.Optional;
@@ -62,22 +63,18 @@ public final class DefaultExtensionManager implements ExtensionManagerAdapter, M
 
     private final ServiceRegistry serviceRegistry = new SpiServiceRegistry();
     private final ImplicitConfigurationFactory implicitConfigurationFactory = new DefaultImplicitConfigurationFactory();
+    private final DescriberResolver describerResolver = new DescriberResolver();
 
     private MuleContext muleContext;
     private ExtensionRegistry extensionRegistry;
-    private ExtensionDiscoverer extensionDiscoverer;
+    private ExtensionFactory extensionFactory;
     private ConfigurationExpirationMonitor configurationExpirationMonitor;
 
     @Override
     public void initialise() throws InitialisationException
     {
         extensionRegistry = new ExtensionRegistry(muleContext.getRegistry());
-        if (extensionDiscoverer == null)
-        {
-            extensionDiscoverer = new DefaultExtensionDiscoverer(
-                    new DefaultExtensionFactory(serviceRegistry, muleContext.getExecutionClassLoader()),
-                    serviceRegistry);
-        }
+        extensionFactory = new DefaultExtensionFactory(serviceRegistry, muleContext.getExecutionClassLoader());
     }
 
     /**
@@ -101,21 +98,6 @@ public final class DefaultExtensionManager implements ExtensionManagerAdapter, M
     public void stop() throws MuleException
     {
         configurationExpirationMonitor.stopMonitoring();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<RuntimeExtensionModel> discoverExtensions(ClassLoader classLoader)
-    {
-        LOGGER.info("Starting discovery of extensions");
-
-        List<RuntimeExtensionModel> discovered = extensionDiscoverer.discover(classLoader);
-        LOGGER.info("Discovered {} extensions", discovered.size());
-
-        discovered.forEach(this::registerExtension);
-        return ImmutableList.copyOf(extensionRegistry.getExtensions());
     }
 
     /**
@@ -148,6 +130,18 @@ public final class DefaultExtensionManager implements ExtensionManagerAdapter, M
      * {@inheritDoc}
      */
     @Override
+    public void registerExtension(ExtensionManifest manifest, ClassLoader classLoader)
+    {
+        Describer describer = describerResolver.resolve(manifest, classLoader);
+        RuntimeExtensionModel extensionModel = extensionFactory.createFrom(describer.describe(new DefaultDescribingContext()));
+
+        registerExtension(extensionModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <C> void registerConfigurationProvider(ConfigurationProvider<C> configurationProvider)
     {
         extensionRegistry.registerConfigurationProvider(configurationProvider);
@@ -156,7 +150,7 @@ public final class DefaultExtensionManager implements ExtensionManagerAdapter, M
     /**
      * {@inheritDoc}
      */
-    //TODO: muleEvent should actually be of MuleEvent type when mule-api jar becomes available
+    //TODO: MULE-8946
     @Override
     public <C> ConfigurationInstance<C> getConfiguration(String configurationProviderName, Object muleEvent)
     {
@@ -168,7 +162,7 @@ public final class DefaultExtensionManager implements ExtensionManagerAdapter, M
     /**
      * {@inheritDoc}
      */
-    //TODO: muleEvent should actually be of MuleEvent type when mule-api jar becomes available
+    //TODO: MULE-8946
     @Override
     public <C> ConfigurationInstance<C> getConfiguration(ExtensionModel extensionModel, Object muleEvent)
     {
@@ -301,10 +295,5 @@ public final class DefaultExtensionManager implements ExtensionManagerAdapter, M
     public void setMuleContext(MuleContext muleContext)
     {
         this.muleContext = muleContext;
-    }
-
-    void setExtensionsDiscoverer(ExtensionDiscoverer discoverer)
-    {
-        extensionDiscoverer = discoverer;
     }
 }

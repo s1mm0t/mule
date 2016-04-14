@@ -6,11 +6,11 @@
  */
 package org.mule.module.extension.internal.resources;
 
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.assertFalse;
-import static junit.framework.Assert.assertNotNull;
+import static java.util.Arrays.asList;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.mockito.Answers.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import org.mule.api.registry.ServiceRegistry;
 import org.mule.extension.api.introspection.ExtensionModel;
@@ -18,7 +18,9 @@ import org.mule.extension.api.introspection.property.SubTypesModelProperty;
 import org.mule.extension.api.introspection.property.XmlModelProperty;
 import org.mule.extension.api.resources.GeneratedResource;
 import org.mule.extension.api.resources.ResourcesGenerator;
-import org.mule.module.extension.internal.capability.xml.SpringBundleResourceContributor;
+import org.mule.module.extension.internal.capability.xml.schema.SchemaResourceFactory;
+import org.mule.module.extension.internal.capability.xml.schema.SpringHandlerBundleResourceFactory;
+import org.mule.module.extension.internal.capability.xml.schema.SpringSchemaBundleResourceFactory;
 import org.mule.module.extension.internal.config.ExtensionNamespaceHandler;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
@@ -36,7 +38,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @SmallTest
 @RunWith(MockitoJUnitRunner.class)
-public class SpringBundleResourceContributorTestCase extends AbstractMuleTestCase
+public class XmlGeneratedResourcesTestCase extends AbstractMuleTestCase
 {
 
     private static final String EXTENSION_NAME = "extension";
@@ -52,11 +54,16 @@ public class SpringBundleResourceContributorTestCase extends AbstractMuleTestCas
     @Mock(answer = RETURNS_DEEP_STUBS)
     private ServiceRegistry serviceRegistry;
 
+    @Mock
+    private ProcessingEnvironment processingEnvironment;
+
     private ResourcesGenerator generator;
 
     private XmlModelProperty xmlModelProperty;
 
-    private SpringBundleResourceContributor contributor;
+    private SpringHandlerBundleResourceFactory springHandlerFactory = new SpringHandlerBundleResourceFactory();
+    private SpringSchemaBundleResourceFactory springSchemaBundleResourceFactory = new SpringSchemaBundleResourceFactory();
+    private SchemaResourceFactory schemaResourceFactory = new SchemaResourceFactory();
 
     @Before
     public void before()
@@ -65,46 +72,39 @@ public class SpringBundleResourceContributorTestCase extends AbstractMuleTestCas
         when(extensionModel.getModelProperty(XmlModelProperty.class)).thenReturn(Optional.of(xmlModelProperty));
         when(extensionModel.getModelProperty(SubTypesModelProperty.class)).thenReturn(Optional.empty());
 
-        generator = new AnnotationProcessorResourceGenerator(mock(ProcessingEnvironment.class), serviceRegistry);
+        generator = new AnnotationProcessorResourceGenerator(asList(springHandlerFactory, springSchemaBundleResourceFactory, schemaResourceFactory), processingEnvironment);
 
         when(extensionModel.getName()).thenReturn(EXTENSION_NAME);
         when(extensionModel.getVersion()).thenReturn(EXTENSION_VERSION);
-
-        contributor = new SpringBundleResourceContributor();
     }
 
     @Test
-    public void generateSchema()
+    public void generateSchema() throws Exception
     {
-        contributor.contribute(extensionModel, generator);
-
-        GeneratedResource resource = generator.get(SCHEMA_NAME);
-        assertNotNull(resource);
-        assertFalse(StringUtils.isBlank(resource.getContentBuilder().toString()));
+        GeneratedResource resource = schemaResourceFactory.generateResource(extensionModel).get();
+        assertThat(StringUtils.isBlank(new String(resource.getContent())), is(false));
     }
 
     @Test
-    public void springHandlers()
+    public void springHandlers() throws Exception
     {
-        contributor.contribute(extensionModel, generator);
+        GeneratedResource resource = springHandlerFactory.generateResource(extensionModel).get();
 
-        GeneratedResource resource = generator.get("spring.handlers");
-        assertNotNull(resource);
-        assertEquals(String.format("%s=%s", ESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, ExtensionNamespaceHandler.class.getName()), resource.getContentBuilder().toString());
+        assertThat(resource.getPath(), equalTo("spring.handlers"));
+        assertThat(String.format("%s=%s", ESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, ExtensionNamespaceHandler.class.getName()), equalTo(new String(resource.getContent())));
     }
 
     @Test
-    public void springSchemas()
+    public void springSchemas() throws Exception
     {
-        contributor.contribute(extensionModel, generator);
-
-        GeneratedResource resource = generator.get("spring.schemas");
-        assertNotNull(resource);
+        GeneratedResource resource = springSchemaBundleResourceFactory.generateResource(extensionModel).get();
+        assertThat(resource.getPath(), equalTo("spring.schemas"));
 
         StringBuilder expected = new StringBuilder();
         expected.append(String.format("%s/%s/%s=META-INF/%s\n", ESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, EXTENSION_VERSION, SCHEMA_NAME, SCHEMA_NAME));
         expected.append(String.format("%s/current/%s=META-INF/%s\n", ESCAPED_LOCATION_PREFIX + SCHEMA_LOCATION, SCHEMA_NAME, SCHEMA_NAME));
 
-        assertEquals(expected.toString(), resource.getContentBuilder().toString());
+
+        assertThat(expected.toString(), equalTo(new String(resource.getContent())));
     }
 }

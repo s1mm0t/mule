@@ -10,25 +10,25 @@ import static org.mule.module.extension.internal.ExtensionProperties.EXTENSION_M
 import static org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber.DESCRIBER_ID;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.manifest.ExtensionManifestBuilder;
-import org.mule.extension.api.persistence.manifest.ExtensionManifestSerializer;
-import org.mule.extension.api.resources.ResourcesGenerator;
-import org.mule.extension.api.resources.spi.GeneratedResourceContributor;
+import org.mule.extension.api.persistence.manifest.ExtensionManifestXmlSerializer;
+import org.mule.extension.api.resources.GeneratedResource;
+import org.mule.extension.api.resources.spi.GeneratedResourceFactory;
 import org.mule.module.extension.internal.introspection.describer.AnnotationsBasedDescriber;
 import org.mule.module.extension.internal.model.property.ImplementingTypeModelProperty;
 
 import java.util.Optional;
 
-public class ExtensionManifestGenerator implements GeneratedResourceContributor
+public class ExtensionManifestGenerator implements GeneratedResourceFactory
 {
 
     @Override
-    public void contribute(ExtensionModel extensionModel, ResourcesGenerator resourcesGenerator)
+    public Optional<GeneratedResource> generateResource(ExtensionModel extensionModel)
     {
         Optional<ImplementingTypeModelProperty> typeProperty = extensionModel.getModelProperty(ImplementingTypeModelProperty.class);
 
         if (!typeProperty.isPresent())
         {
-            return;
+            return Optional.empty();
         }
 
         ExtensionManifestBuilder builder = new ExtensionManifestBuilder();
@@ -39,7 +39,7 @@ public class ExtensionManifestGenerator implements GeneratedResourceContributor
                 .setId(DESCRIBER_ID)
                 .addProperty(AnnotationsBasedDescriber.TYPE_PROPERTY_NAME, typeProperty.get().getType().getName());
 
-        String manifestXml = new ExtensionManifestSerializer().serialize(builder.build());
-        resourcesGenerator.get(EXTENSION_MANIFEST_FILE_NAME).getContentBuilder().append(manifestXml);
+        String manifestXml = new ExtensionManifestXmlSerializer().serialize(builder.build());
+        return Optional.of(new GeneratedResource(EXTENSION_MANIFEST_FILE_NAME, manifestXml.getBytes()));
     }
 }
