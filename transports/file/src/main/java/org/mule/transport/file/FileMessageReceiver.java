@@ -61,8 +61,6 @@ public class FileMessageReceiver extends AbstractPollingMessageReceiver
     public static final String COMPARATOR_REVERSE_ORDER_PROPERTY = "reverseOrder";
     public static final String MULE_TRANSPORT_FILE_SINGLEPOLLINSTANCE = "mule.transport.file.singlepollinstance";
 
-    private static final List<File> NO_FILES = new ArrayList<File>();
-
     private FileConnector fileConnector = null;
     private String readDir = null;
     private String moveDir = null;
@@ -678,7 +676,7 @@ public class FileMessageReceiver extends AbstractPollingMessageReceiver
         {
             List<File> files = new ArrayList<File>();
             this.basicListFiles(readDirectory, files);
-            return (files.isEmpty() ? NO_FILES : files);
+            return files;
         }
         catch (Exception e)
         {
