@@ -90,7 +90,7 @@ public class DefaultMessageProcessorChain extends AbstractMessageProcessorChain
                 MessageProcessor processor = processors.get(i);
                 if (flowConstructIsNotAService && processorMayReturnNull(processor))
                 {
-                    copy = ((event instanceof ThreadSafeAccess) ? new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage()), event) : event);
+                    copy = OptimizedRequestContext.criticalSetEvent((event instanceof ThreadSafeAccess) ? new DefaultMuleEvent(new DefaultMuleMessage(event.getMessage()), event) : event);
                 }
 
                 event = messageProcessorExecutionTemplate.execute(processor, event);
